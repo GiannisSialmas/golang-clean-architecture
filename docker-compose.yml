@@ -1,0 +1,47 @@
+version: '3'
+services:
+
+  postgres:
+    image: postgres:11-alpine
+    logging:
+        driver: none
+    ports:
+      - "5432:5432"
+    environment:
+    - POSTGRES_USER=postgres
+    - POSTGRES_PASSWORD=postgres
+    - POSTGRES_DB=users
+
+
+  pg-admin:
+      image: dpage/pgadmin4
+      logging:
+          driver: none
+      ports:
+        - "9000:80"
+      environment:
+      - PGADMIN_DEFAULT_EMAIL=giannis@example.com
+      - PGADMIN_DEFAULT_PASSWORD=giannis
+      volumes:
+        - ${PWD}/servers.json:/pgadmin4/servers.json
+
+  # If you want to test the application in docker and not on localhost
+  # IMO this should be done in the latest stages of the project
+  go:
+    depends_on:
+      - postgres
+    build:
+        context: .
+        dockerfile: Dockerfile
+    stdin_open: true
+    tty: true
+    ports:
+      - 8080:80
+    stop_signal: SIGINT
+    environment:
+      - DB_NAME=users
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+
