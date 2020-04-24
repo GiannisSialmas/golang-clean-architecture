@@ -30,8 +30,23 @@ func (userRepository *userRepository) Create(user models.User) (models.User, err
 func (userRepository *userRepository) GetOne(id uint) (models.User, error) {
 
 	var user models.User
-	if err := userRepository.db.First(&user, id).Error; err != nil {
-		return user, exceptions.ErrUserNotFound
+	result := userRepository.db.Where("ID = ?", id).First(&user)
+	if result.Error != nil {
+		return user, result.Error
+	}
+	// Gorm after creating the record, inserts the ID plus timestamps into the object
+	return user, nil
+
+}
+
+func (userRepository *userRepository) GetByEmail(email string) (models.User, error) {
+
+	// TODO: Should i validate the email here?
+
+	var user models.User
+	result := userRepository.db.Where("email = ?", email).First(&user)
+	if result.Error != nil {
+		return user, result.Error
 	}
 	// Gorm after creating the record, inserts the ID plus timestamps into the object
 	return user, nil
@@ -49,11 +64,11 @@ func (userRepository *userRepository) GetAll() ([]models.User, error) {
 
 }
 
-func (userRepository *userRepository) Update(user models.User) (models.User, error) {
+// func (userRepository *userRepository) Update(user models.User) (models.User, error) {
 
-	return user, nil
+// 	return user, nil
 
-}
+// }
 
 func (userRepository *userRepository) Delete(id uint) error {
 
@@ -61,10 +76,11 @@ func (userRepository *userRepository) Delete(id uint) error {
 	if result.Error != nil {
 		return result.Error
 	}
+	// Gorm does not return an error if zero entries are deleted so we must manually throw an error
 	if result.RowsAffected == 0 {
 		return exceptions.ErrUserNotFound
 	}
-	// Gorm after creating the record, inserts the ID plus timestamps into the object
+
 	return nil
 
 }
