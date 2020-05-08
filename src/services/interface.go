@@ -1,11 +1,11 @@
 package services
 
 import (
-	"application/models"
+	"application/utils/dto"
 )
 
 type IServiceLayer interface {
-	CreateUser(models.User) (models.User, error)
+	CreateUser(dto.UserCreateRequest) (dto.UserCreateResponse, error)
 	// Login()
 	// Logout()
 	// ChangePassword()

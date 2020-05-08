@@ -1,4 +1,4 @@
-version: '3'
+version: '3.4'
 services:
 
   postgres:
@@ -33,12 +33,19 @@ services:
     build:
         context: .
         dockerfile: Dockerfile
-    stdin_open: true
-    tty: true
+        target: build
+    # THe below tty cause a message "An Http request took too long to complete" and crashes docker
+    # Only use it for debug
+    # stdin_open: true
+    # tty: true
+    volumes: 
+    - ./src/:/app/
     ports:
       - 8080:80
     stop_signal: SIGINT
+    restart: always
     environment:
+      - GIN_MODE=release
       - DB_NAME=users
       - DB_HOST=postgres
       - DB_PORT=5432

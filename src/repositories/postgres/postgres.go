@@ -1,10 +1,12 @@
 package postgres
 
 import (
+	"application/exceptions"
 	"application/models"
 	"application/repositories"
-	"application/repositories/exceptions"
+	"application/utils/dto"
 
+	"github.com/jinzhu/copier"
 	"github.com/jinzhu/gorm"
 )
 
@@ -17,13 +19,27 @@ func NewUserRepository(db *gorm.DB) repositories.IUserRepository {
 	return &userRepository{db}
 }
 
-func (userRepository *userRepository) Create(user models.User) (models.User, error) {
+func (userRepository *userRepository) Create(user dto.UserCreateRequest) (dto.UserCreateResponse, error) {
 
-	if err := userRepository.db.Create(&user).Error; err != nil {
-		return user, err
+	// Check if user Already exists
+	if err := userRepository.db.Where("email = ?", user.Email).First(&models.User{}).Error; !gorm.IsRecordNotFoundError(err) {
+		return dto.UserCreateResponse{}, exceptions.ErrUserEmailExists
 	}
+
+	// DTO to db model for gorm usage
+	var userCreated models.User
+	copier.Copy(&userCreated, &user)
+
+	if err := userRepository.db.Create(&userCreated).Error; err != nil {
+		return dto.UserCreateResponse{}, err
+	}
+
+	// Db model to dto to return to upper layers
+	var userCreatedResponseDto dto.UserCreateResponse
+	copier.Copy(&userCreated, &userCreatedResponseDto)
+
 	// Gorm after creating the record, inserts the ID plus timestamps into the object
-	return user, nil
+	return userCreatedResponseDto, nil
 
 }
 
@@ -46,8 +62,11 @@ func (userRepository *userRepository) GetByEmail(email string) (models.User, err
 	var user models.User
 	result := userRepository.db.Where("email = ?", email).First(&user)
 	if result.Error != nil {
-		return user, result.Error
+		return user, exceptions.ErrGeneral
+	} else if result.RecordNotFound() {
+		return user, exceptions.ErrUserNotFound
 	}
+
 	// Gorm after creating the record, inserts the ID plus timestamps into the object
 	return user, nil
 
