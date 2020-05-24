@@ -21,10 +21,7 @@ RUN go get github.com/githubnemo/CompileDaemon
 
 # Copy and build the app
 COPY src/ .
-# RUN go build -ldflags="-w -s" -o ./main ./main.go
-# ENTRYPOINT CompileDaemon --build="go build -o ./main ./main.go" --command=./main
-ENTRYPOINT CompileDaemon --build="go build -o /tmp/main ./main.go" --command=/tmp/main
-
+RUN go build -ldflags="-w -s" -o ./main ./main.go
 
 
 FROM scratch
