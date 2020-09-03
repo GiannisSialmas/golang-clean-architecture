@@ -20,7 +20,7 @@ import (
 // Controllers dont have a point because the depend on the framework, but if we use the contructor method we can write unit tests for them easier
 
 func main() {
-
+	fmt.Printf("Program Starting")
 	db := database.NewDB()
 	defer db.Close()
 
